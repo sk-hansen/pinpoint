@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Element Feedback",
+  "version": "0.1.0",
+  "description": "Grab page elements or annotate them with feedback, then copy everything as Markdown for an AI agent.",
+  "permissions": ["storage", "activeTab"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["format.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Element Feedback"
+  },
+  "commands": {
+    "start-grab": {
+      "suggested_key": { "default": "Alt+Shift+G" },
+      "description": "Grab element (copy context)"
+    },
+    "start-annotate": {
+      "suggested_key": { "default": "Alt+Shift+A" },
+      "description": "Annotate element"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

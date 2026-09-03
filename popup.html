@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { font: 13px system-ui; width: 280px; margin: 0; padding: 12px; color: #111; }
+      h1 { font-size: 14px; margin: 0 0 10px; }
+      button { width: 100%; padding: 8px; margin-bottom: 6px; border: 0; border-radius: 6px; cursor: pointer; font: 13px system-ui; }
+      .primary { background: #4084ff; color: #fff; }
+      .secondary { background: #eee; }
+      .danger { background: #fbe9e9; color: #b00; }
+      #count { color: #666; margin: 8px 0; }
+      #status { color: #2a7a2a; height: 16px; margin-top: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>Element Feedback</h1>
+    <button id="grab" class="secondary">Grab element (copy context)</button>
+    <button id="annotate" class="primary">Annotate element</button>
+    <div id="count">0 annotations for this site</div>
+    <button id="copy" class="primary">Copy all as Markdown</button>
+    <button id="clear" class="danger">Clear annotations</button>
+    <div id="status"></div>
+    <script src="format.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
