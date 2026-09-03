@@ -1,4 +1,6 @@
-# Element Feedback
+# Pinpoint
+
+<img src="icons/icon.svg" width="96" align="right" alt="Pinpoint icon" />
 
 Chrome extension: click elements on any page, add feedback, copy it all as
 Markdown for an AI coding agent. Inspired by
