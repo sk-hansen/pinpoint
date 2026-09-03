@@ -3,24 +3,184 @@
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font: 13px system-ui; width: 280px; margin: 0; padding: 12px; color: #111; }
-      h1 { font-size: 14px; margin: 0 0 10px; }
-      button { width: 100%; padding: 8px; margin-bottom: 6px; border: 0; border-radius: 6px; cursor: pointer; font: 13px system-ui; }
-      .primary { background: #4084ff; color: #fff; }
-      .secondary { background: #eee; }
-      .danger { background: #fbe9e9; color: #b00; }
-      #count { color: #666; margin: 8px 0; }
-      #status { color: #2a7a2a; height: 16px; margin-top: 4px; }
+      :root {
+        --bg: #ffffff;
+        --fg: #1a1d21;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --card: #f7f8fa;
+        --accent: #3b82f6;
+        --accent-fg: #ffffff;
+        --danger: #dc2626;
+        --danger-bg: #fef2f2;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1b1e23;
+          --fg: #e6e8eb;
+          --muted: #9aa1ab;
+          --border: #33383f;
+          --card: #23272e;
+          --accent: #4c8dff;
+          --accent-fg: #ffffff;
+          --danger: #f47272;
+          --danger-bg: #2c2023;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        font: 13px/1.45 system-ui, sans-serif;
+        width: 320px;
+        margin: 0;
+        padding: 14px;
+        background: var(--bg);
+        color: var(--fg);
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+      h1 { font-size: 14px; font-weight: 650; margin: 0; letter-spacing: -0.01em; }
+      #count {
+        font-size: 11px;
+        color: var(--muted);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+      .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+      .mode {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        align-items: flex-start;
+        padding: 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card);
+        color: var(--fg);
+        cursor: pointer;
+        font: inherit;
+        text-align: left;
+        transition: border-color 0.12s, background 0.12s;
+      }
+      .mode:hover { border-color: var(--accent); }
+      .mode:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .mode strong { font-size: 12.5px; font-weight: 600; }
+      .mode span { font-size: 11px; color: var(--muted); }
+      kbd {
+        font: 10px/1 ui-monospace, monospace;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 4px;
+        margin-top: 4px;
+      }
+      #list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; max-height: 260px; overflow-y: auto; }
+      .item {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card);
+      }
+      .item .n {
+        flex: none;
+        font: 600 10px/18px ui-monospace, monospace;
+        width: 18px; height: 18px;
+        text-align: center;
+        border-radius: 50%;
+        background: var(--accent);
+        color: var(--accent-fg);
+      }
+      .item .body { min-width: 0; flex: 1; }
+      .item .sel {
+        font: 11px ui-monospace, monospace;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .item .comment {
+        font-size: 12px;
+        margin-top: 2px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .item .del {
+        flex: none;
+        border: 0;
+        background: none;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        padding: 2px;
+        border-radius: 4px;
+      }
+      .item .del:hover { color: var(--danger); background: var(--danger-bg); }
+      #empty {
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+        padding: 14px 8px;
+        border: 1px dashed var(--border);
+        border-radius: 8px;
+        margin-bottom: 12px;
+      }
+      .actions { display: flex; gap: 8px; }
+      .btn {
+        flex: 1;
+        padding: 8px 10px;
+        border: 0;
+        border-radius: 7px;
+        cursor: pointer;
+        font: 600 12.5px system-ui, sans-serif;
+        transition: filter 0.12s;
+      }
+      .btn:hover { filter: brightness(1.08); }
+      .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+      .btn.primary { background: var(--accent); color: var(--accent-fg); }
+      .btn.ghost { background: var(--card); color: var(--danger); border: 1px solid var(--border); flex: 0 0 auto; }
+      #status { color: var(--muted); font-size: 11px; height: 15px; margin-top: 8px; text-align: center; }
+      #status.ok { color: #16a34a; }
     </style>
   </head>
   <body>
-    <h1>Element Feedback</h1>
-    <button id="grab" class="secondary">Grab element (copy context)</button>
-    <button id="annotate" class="primary">Annotate element</button>
-    <div id="count">0 annotations for this site</div>
-    <button id="copy" class="primary">Copy all as Markdown</button>
-    <button id="clear" class="danger">Clear annotations</button>
+    <header>
+      <h1>Element Feedback</h1>
+      <span id="count">0</span>
+    </header>
+
+    <div class="modes">
+      <button id="grab" class="mode">
+        <strong>Grab</strong>
+        <span>Copy element context</span>
+        <kbd>Alt·Shift·G</kbd>
+      </button>
+      <button id="annotate" class="mode">
+        <strong>Annotate</strong>
+        <span>Add feedback note</span>
+        <kbd>Alt·Shift·A</kbd>
+      </button>
+    </div>
+
+    <div id="empty" hidden>No annotations for this site yet.<br />Pick <b>Annotate</b> and click an element.</div>
+    <div id="list"></div>
+
+    <div class="actions">
+      <button id="copy" class="btn primary">Copy all as Markdown</button>
+      <button id="clear" class="btn ghost" title="Clear all annotations">Clear</button>
+    </div>
     <div id="status"></div>
+
     <script src="format.js"></script>
     <script src="popup.js"></script>
   </body>

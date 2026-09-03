@@ -8,6 +8,8 @@
   let highlight = null;
   let label = null;
   let current = null;
+  let childStack = []; // for ArrowUp/ArrowDown parent/child refinement
+  const dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   // ---------- selector builder (id -> test attrs -> classes -> nth-of-type) ----------
   function esc(v) {
@@ -118,9 +120,9 @@
   // ---------- UI bits ----------
   function makeHighlight() {
     highlight = document.createElement("div");
-    highlight.style.cssText = `position:fixed;pointer-events:none;z-index:${Z};background:rgba(64,132,255,.18);outline:2px solid #4084ff;border-radius:2px;transition:all .05s`;
+    highlight.style.cssText = `position:fixed;pointer-events:none;z-index:${Z};background:rgba(59,130,246,.14);outline:1.5px solid #3b82f6;outline-offset:-1px;border-radius:2px;transition:left .06s,top .06s,width .06s,height .06s;box-shadow:0 0 0 4px rgba(59,130,246,.08)`;
     label = document.createElement("div");
-    label.style.cssText = `position:fixed;pointer-events:none;z-index:${Z};background:#1a1a1a;color:#fff;font:12px/1.6 monospace;padding:1px 6px;border-radius:3px;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap`;
+    label.style.cssText = `position:fixed;pointer-events:none;z-index:${Z};display:flex;gap:8px;align-items:baseline;background:#1c1f24;color:#e6e8eb;font:11px/1.7 ui-monospace,monospace;padding:2px 8px;border-radius:4px;max-width:70vw;overflow:hidden;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.35)`;
     document.documentElement.append(highlight, label);
   }
 
@@ -130,32 +132,53 @@
     highlight.style.top = r.y + "px";
     highlight.style.width = r.width + "px";
     highlight.style.height = r.height + "px";
-    label.textContent = segment(el);
-    label.style.left = r.x + "px";
-    label.style.top = Math.max(0, r.y - 22) + "px";
+    label.innerHTML = "";
+    const sel = document.createElement("span");
+    sel.style.cssText = "color:#7cb1ff;overflow:hidden;text-overflow:ellipsis";
+    sel.textContent = segment(el);
+    const dim = document.createElement("span");
+    dim.style.cssText = "color:#9aa1ab";
+    dim.textContent = `${Math.round(r.width)}\u00d7${Math.round(r.height)}`;
+    label.append(sel, dim);
+    const labelTop = r.y >= 26 ? r.y - 24 : Math.min(window.innerHeight - 24, r.y + r.height + 4);
+    label.style.left = Math.max(4, r.x) + "px";
+    label.style.top = labelTop + "px";
   }
 
   function toast(msg) {
     const t = document.createElement("div");
     t.textContent = msg;
-    t.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:${Z};background:#1a1a1a;color:#fff;font:13px system-ui;padding:8px 16px;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.3)`;
+    t.style.cssText = `position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);opacity:0;z-index:${Z};background:#1c1f24;color:#e6e8eb;font:13px/1.4 system-ui,sans-serif;padding:9px 18px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.35);transition:opacity .15s,transform .15s`;
     document.documentElement.append(t);
-    setTimeout(() => t.remove(), 2000);
+    requestAnimationFrame(() => {
+      t.style.opacity = "1";
+      t.style.transform = "translateX(-50%)";
+    });
+    setTimeout(() => {
+      t.style.opacity = "0";
+      setTimeout(() => t.remove(), 200);
+    }, 2200);
   }
 
   function commentBox(el, rect) {
+    const c = dark
+      ? { bg: "#1f2329", fg: "#e6e8eb", muted: "#9aa1ab", border: "#3a4048", field: "#171a1f" }
+      : { bg: "#ffffff", fg: "#1a1d21", muted: "#6b7280", border: "#e5e7eb", field: "#f7f8fa" };
     const box = document.createElement("div");
-    box.style.cssText = `position:fixed;z-index:${Z};background:#fff;border:1px solid #ccc;border-radius:8px;padding:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);width:280px;font:13px system-ui;color:#111`;
-    const top = Math.min(Math.max(8, rect.y + rect.height + 6), window.innerHeight - 140);
-    const leftPos = Math.min(Math.max(8, rect.x), window.innerWidth - 296);
+    box.style.cssText = `position:fixed;z-index:${Z};background:${c.bg};color:${c.fg};border:1px solid ${c.border};border-radius:10px;padding:10px;box-shadow:0 10px 32px rgba(0,0,0,.3);width:300px;font:13px/1.45 system-ui,sans-serif`;
+    const top = Math.min(Math.max(8, rect.y + rect.height + 8), window.innerHeight - 170);
+    const leftPos = Math.min(Math.max(8, rect.x), window.innerWidth - 316);
     box.style.top = top + "px";
     box.style.left = leftPos + "px";
     box.innerHTML = `
-      <textarea placeholder="Feedback for this element\u2026 (Ctrl+Enter to save)" style="width:100%;height:64px;box-sizing:border-box;font:13px system-ui;padding:6px;border:1px solid #ddd;border-radius:4px;resize:vertical;background:#fff;color:#111"></textarea>
-      <div style="display:flex;gap:6px;justify-content:flex-end;margin-top:6px">
-        <button data-ef="cancel" style="padding:4px 10px;border:1px solid #ccc;border-radius:4px;background:#f5f5f5;cursor:pointer;color:#111">Cancel</button>
-        <button data-ef="save" style="padding:4px 10px;border:0;border-radius:4px;background:#4084ff;color:#fff;cursor:pointer">Save</button>
+      <div data-ef-sel style="font:11px ui-monospace,monospace;color:${c.muted};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:8px"></div>
+      <textarea placeholder="Feedback for this element\u2026" style="width:100%;height:70px;box-sizing:border-box;font:13px/1.45 system-ui,sans-serif;padding:8px;border:1px solid ${c.border};border-radius:6px;resize:vertical;background:${c.field};color:${c.fg};outline:none"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <span style="font-size:11px;color:${c.muted};margin-right:auto">Ctrl+Enter saves</span>
+        <button data-ef="cancel" style="padding:5px 12px;border:1px solid ${c.border};border-radius:6px;background:transparent;cursor:pointer;color:${c.fg};font:600 12px system-ui">Cancel</button>
+        <button data-ef="save" style="padding:5px 14px;border:0;border-radius:6px;background:#3b82f6;color:#fff;cursor:pointer;font:600 12px system-ui">Save</button>
       </div>`;
+    box.querySelector("[data-ef-sel]").textContent = segment(el);
     document.documentElement.append(box);
     const ta = box.querySelector("textarea");
     ta.focus();
@@ -196,6 +219,7 @@
       return;
     }
     current = el;
+    childStack = [];
     moveHighlight(el);
   }
 
@@ -216,7 +240,36 @@
   }
 
   function onKey(e) {
-    if (e.key === "Escape") stopPicker();
+    if (e.key === "Escape") {
+      e.preventDefault();
+      e.stopPropagation();
+      stopPicker();
+      return;
+    }
+    if (!current) return;
+    // Refine the selection: ArrowUp widens to the parent, ArrowDown steps back in.
+    if (e.key === "ArrowUp") {
+      const parent = current.parentElement;
+      if (parent && parent !== document.documentElement && parent !== document.body) {
+        childStack.push(current);
+        current = parent;
+        moveHighlight(current);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (e.key === "ArrowDown") {
+      const child = childStack.pop();
+      if (child) {
+        current = child;
+        moveHighlight(current);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      e.stopPropagation();
+      onClick(e);
+    }
   }
 
   function startPicker(m) {
@@ -227,12 +280,16 @@
     document.addEventListener("click", onClick, true);
     document.addEventListener("keydown", onKey, true);
     document.documentElement.style.cursor = "crosshair";
-    toast(m === "grab" ? "Click an element to copy its context (Esc to cancel)" : "Click an element to annotate (Esc to cancel)");
+    toast(
+      (m === "grab" ? "Click an element to copy its context" : "Click an element to annotate") +
+        " \u00b7 \u2191\u2193 parent/child \u00b7 Esc cancels"
+    );
   }
 
   function stopPicker() {
     mode = null;
     current = null;
+    childStack = [];
     highlight?.remove();
     label?.remove();
     highlight = label = null;
