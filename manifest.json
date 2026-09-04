@@ -29,11 +29,11 @@
   },
   "commands": {
     "start-grab": {
-      "suggested_key": { "default": "Alt+Shift+G" },
+      "suggested_key": { "default": "Alt+G" },
       "description": "Grab element (copy context)"
     },
     "start-annotate": {
-      "suggested_key": { "default": "Alt+Shift+A" },
+      "suggested_key": { "default": "Alt+A" },
       "description": "Annotate element"
     }
   },

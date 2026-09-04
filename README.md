@@ -25,7 +25,7 @@ Framework source detection works for React (`_debugSource`), Svelte
 2. **Load unpacked** → select this folder
 3. Reload any already-open tabs you want to use it on
 
-Shortcuts: `Alt+Shift+G` grab, `Alt+Shift+A` annotate, `Esc` cancels the picker.
+Shortcuts: `Alt+G` grab, `Alt+A` annotate, `Esc` cancels the picker.
 
 ## Test
 
