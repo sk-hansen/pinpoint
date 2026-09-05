@@ -181,9 +181,36 @@
     box.querySelector("[data-ef-sel]").textContent = segment(el);
     document.documentElement.append(box);
     const ta = box.querySelector("textarea");
+
+    // Swallow events involving the box at window capture, before the page's own
+    // document-level listeners (modal focus traps, outside-click closers, hotkeys)
+    // can steal focus or dismiss their pane. relatedTarget check also hides the
+    // focusout a focus trap would react to when focus moves from its dialog to us.
+    function onEvent(e) {
+      const inBox = (n) => n instanceof Node && box.contains(n);
+      if (!inBox(e.target) && !inBox(e.relatedTarget)) return;
+      e.stopPropagation();
+      if (e.type === "click") {
+        const b = e.target.dataset?.ef;
+        if (b === "save") save();
+        if (b === "cancel") close();
+      } else if (e.type === "keydown") {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) save();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          close();
+        }
+      }
+    }
+    const types = [
+      "pointerdown", "pointerup", "mousedown", "mouseup", "click", "dblclick",
+      "keydown", "keyup", "keypress", "input", "focusin", "focusout",
+    ];
+    types.forEach((t) => window.addEventListener(t, onEvent, true));
     ta.focus();
 
     function close() {
+      types.forEach((t) => window.removeEventListener(t, onEvent, true));
       box.remove();
     }
     async function save() {
@@ -196,15 +223,6 @@
       close();
       toast(`Annotation ${list.length} saved`);
     }
-    box.addEventListener("click", (e) => {
-      const b = e.target.dataset?.ef;
-      if (b === "save") save();
-      if (b === "cancel") close();
-    });
-    ta.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) save();
-      if (e.key === "Escape") close();
-    });
   }
 
   // ---------- picker ----------
